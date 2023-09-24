@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
+from sqlalchemy.orm import validates
 
 db = SQLAlchemy()
 
@@ -25,8 +26,20 @@ class Restaurant(db.Model, SerializerMixin):
 
     pizzas = db.relationship('RestaurantPizza', backref='restaurants')
 
-    #validations -> name must have less than 50 characters in length
-    #               name must be unique
+    # name must not have more than 50 characters & must be unique
+    @validates('name')
+    def validate_name(self, key, name):
+        if len(name) >= 50:
+            raise ValueError("Name cannot be greater than 50 characters")
+        
+        if (
+            self.query
+            .filter(Restaurant.name == name)
+            .filter(Restaurant.id != self.id)
+            .first()
+        ):
+            raise ValueError("Restaurant is already registered")
+        return name
 
 class RestaurantPizza(db.Model, SerializerMixin):
     __tablename__ = 'restaurant_pizzas'
@@ -40,3 +53,8 @@ class RestaurantPizza(db.Model, SerializerMixin):
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
     #validations -> price must be between 1 and 30
+    @validates('price')
+    def validate_price(self, key, price):
+        if price < 1 or price > 30:
+            raise ValueError("Price must be between 1 and 30")
+        return price
