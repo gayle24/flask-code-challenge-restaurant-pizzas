@@ -1,5 +1,6 @@
-from flask import Flask, make_response
+from flask import Flask, make_response, jsonify
 from flask_migrate import Migrate
+from flask_restful import Api, Resource
 
 from models import db, Restaurant, Pizza, RestaurantPizza
 
@@ -11,25 +12,82 @@ migrate = Migrate(app, db)
 
 db.init_app(app)
 
-@app.route('/')
-def index():
-    return 'Restaurant Pizzas Code Challenge'
+api = Api(app)
 
-@app.route('/restaurants')
-def restaurants(self):
-    pass
-    # get all restaurants in json format with id, name, address
+class Index(Resource):
+    def get(self):
+        response_dict = {
+            "index": "Restaurant Pizza Code Challenge"
+        }
 
-@app.route('/restaurants/<int:id>')
-def restaurant_by_id(self, id):
-    pass
-    # get first restaurant that matches the id, its name, address and pizzas that it serves (restaurantpizza)
-    # in json format; else if the restaurant doesn't exist return "error": {"Restaurant not found"} in json format
-    # along with status code
+        response = make_response(
+            jsonify(response_dict),
+            200
+        )
 
-def delete_restaurant_by_id(self):
-    pass
-    # delete the restaurant that matches the id in the http request
+        return response
+api.add_resource(Index, '/')
+
+class Restaurants(Resource):
+    def get(self):
+        response_dict_list = [item.to_dict() for item in Restaurant.query.all()]
+
+        response = make_response(
+            jsonify(response_dict_list),
+            200
+        )
+
+        return response
+api.add_resource(Index, '/restaurants')
+
+# get first restaurant that matches the id, its name, address and pizzas that it serves (restaurantpizza)
+# in json format; else if the restaurant doesn't exist return "error": {"Restaurant not found"} in json format
+# along with status code
+class RestaurantByID(Resource):
+    def get(self, id):
+        restaurant = Restaurant.query.filter_by(id=id).first()
+
+        if restaurant:
+            response_dict = {
+                "name": restaurant.name,
+                "address": restaurant.address,
+                "pizzas": [rp.pizza.to_dict() for rp in restaurant.restaurant_pizzas]
+            }
+            status_code = 200
+        
+        else:
+            response_dict = {"error": "Restaurant not found"}
+            status_code = 404
+
+        response = make_response(
+            jsonify(response_dict),
+            status_code
+        )
+
+        return response
+    
+    def delete(self, id):
+        record = Restaurant.query.filter_by(id=id).first()
+
+        if record:
+            RestaurantPizza.query.filter_by(restaurant_id=id).delete()
+            db.session.delete(record)
+            db.session.commit()
+
+            response_dict = {"message": "Record successfully deleted"}
+            status_code = 200
+
+        else:
+            response_dict = {"error": "Restaurant not found"}
+            status_code = 404
+
+        response = make_response(
+            jsonify(response_dict),
+            status_code
+        )
+
+        return response
+api.add_resource(RestaurantByID, '/restaurants/<int:id>')
 
 @app.route('/pizzas')
 def pizzas(self):
