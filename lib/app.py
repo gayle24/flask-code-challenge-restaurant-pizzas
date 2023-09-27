@@ -54,11 +54,12 @@ class RestaurantByID(Resource):
         restaurant = Restaurant.query.filter_by(id=id).first()
         # response_dict_list = [Restaurant.query.filter_by(id=id).first().to_dict()]
         if restaurant:
-            response_dict = {
-                "name": restaurant.name,
-                "address": restaurant.address,
-                # "pizzas": [pizza.to_dict() for pizza in restaurant.pizzas] 
-            }
+            response_dict = restaurant.to_dict()
+            # response_dict = {
+            #     "name": restaurant.name,
+            #     "address": restaurant.address,
+            #     # "pizzas": [pizza.to_dict() for pizza in restaurant.pizzas] 
+            # }
             status_code = 200
         else:
             response_dict = {"error": "Restaurant not found"}

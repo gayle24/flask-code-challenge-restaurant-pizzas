@@ -15,7 +15,8 @@ class Pizza(db.Model, SerializerMixin):
 
     restaurants = db.relationship('Restaurant', secondary='restaurant_pizzas', back_populates='pizzas')
 
-    serialize_rules = ('-restaurant_pizzas.pizzas',)
+    # serialize_rules = ('-restaurant_pizzas.pizzas',)
+    serialize_rules = ('-restaurants.pizzas',)
 
 class Restaurant(db.Model, SerializerMixin):
     __tablename__ = 'restaurants'
@@ -40,7 +41,8 @@ class Restaurant(db.Model, SerializerMixin):
             raise ValueError("Restaurant is already registered")
         return name
 
-    serialize_rules = ('-restaurant_pizzas.restaurants',)
+    # serialize_rules = ('-restaurant_pizzas.restaurants',)
+    serialize_rules = ('-pizzas.restaurants',)
 
 class RestaurantPizza(db.Model, SerializerMixin):
     __tablename__ = 'restaurant_pizzas'
@@ -58,5 +60,5 @@ class RestaurantPizza(db.Model, SerializerMixin):
             raise ValueError("Price must be between 1 and 30")
         return price
 
-    serialize_rules = ('-restaurants.restaurant_pizzas', '-pizzas.restaurant_pizzas',)
+    # serialize_rules = ('-restaurants.restaurant_pizzas', '-pizzas.restaurant_pizzas',)
 
